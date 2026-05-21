@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kai — Health Journal Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   DESIGN TOKENS — pulled from Kai's existing design system
+   ========================================================= */
+:root {
+  /* Peach (primary brand — logo, active states, accents) */
+  --peach: #F5A472;
+  --peach-deep: #E89358;
+  --peach-300: #F7BC92;
+  --peach-200: #FBDDC0;
+  --peach-100: #FCEAD4;
+  --peach-50: #FDF1E2;
+
+  /* Cream / canned-prompt default bg */
+  --cream: #FBF0E3;
+  --cream-soft: #FCF5EC;
+
+  /* Neutrals */
+  --white: #FFFFFF;
+  --bg-page: #FFFFFF;
+  --bg-soft: #F7F4F0;
+  --bg-icon-contrast: #ECE8E2;
+
+  /* Grays */
+  --gray-100: #ECE8E2;
+  --gray-200: #DCD7D0;
+  --gray-300: #B8B5AF;
+  --gray-400: #9C9893;
+  --gray-500: #6B6764;
+
+  /* Text */
+  --text-primary: #1A1612;
+  --text-secondary: #6B6764;
+  --text-tertiary: #9C9893;
+  --text-on-dark: #FFFFFF;
+
+  /* Dark dock + modal headers */
+  --dark-bg: #1F1A17;
+  --dark-bg-2: #2A2522;
+  --dark-line: #3A332E;
+  --dock-bg: #2A2C31;
+
+  /* Chart palette (insights dark + warm browns) */
+  --brown-chart-1: #5E4B43;
+  --brown-chart-2: #826B60;
+  --brown-chart-3: #A28B7F;
+
+  /* Severity scale (use only inside charts/legends — NOT a new brand color) */
+  --sev-1: #FBDDC0;   /* mild */
+  --sev-2: #F7BC92;   /* moderate */
+  --sev-3: #E89358;   /* high */
+  --sev-4: #B8643A;   /* severe */
+
+  /* Status */
+  --error: #DC4A4A;
+  --link: #E89358;
+
+  /* Radii */
+  --radius-pill: 999px;
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+
+  /* Shadows */
+  --shadow-card: 0 2px 14px rgba(20, 16, 13, 0.06);
+  --shadow-card-lift: 0 6px 22px rgba(20, 16, 13, 0.10);
+  --shadow-lg: 0 16px 40px rgba(20, 16, 13, 0.18);
+
+  /* Phone */
+  --frame-w: 390px;
+  --frame-h: 844px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: #14110F;
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   LAYOUT — page wraps phone + scenario dock
+   ========================================================= */
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 28px 16px 40px;
+  min-height: 100vh;
+}
+
+.scenarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 720px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.scenarios-label {
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  color: #6B6764;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.scenario-btn {
+  background: #232120;
+  color: #DDD8D2;
+  border: 1px solid #2F2C2A;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+}
+.scenario-btn:hover { background: #2A2725; color: #FFF; }
+.scenario-btn.is-active {
+  background: var(--peach);
+  color: #1A1612;
+  border-color: var(--peach);
+}
+
+/* =========================================================
+   PHONE FRAME
+   ========================================================= */
+.phone {
+  width: calc(var(--frame-w) + 24px);
+  height: calc(var(--frame-h) + 24px);
+  background: #0A0908;
+  border-radius: 60px;
+  padding: 12px;
+  position: relative;
+  box-shadow:
+    0 0 0 2px #2A2725,
+    0 30px 80px rgba(0,0,0,0.5);
+}
+
+.phone::before, .phone::after {
+  content: "";
+  position: absolute;
+  background: #0A0908;
+  border-radius: 2px;
+}
+.phone::before { /* power button right */
+  width: 3px; height: 90px; right: -3px; top: 200px;
+  box-shadow: 0 0 0 1px #2A2725;
+}
+.phone::after { /* volume buttons left */
+  width: 3px; height: 60px; left: -3px; top: 180px;
+  box-shadow: 0 0 0 1px #2A2725, 0 80px 0 #0A0908, 0 80px 0 1px #2A2725;
+}
+.phone .vol2 {
+  position: absolute; width: 3px; height: 60px;
+  left: -3px; top: 260px; background: #0A0908; border-radius: 2px;
+  box-shadow: 0 0 0 1px #2A2725;
+}
+
+.screen-frame {
+  width: var(--frame-w);
+  height: var(--frame-h);
+  background: var(--bg-page);
+  border-radius: 50px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Dynamic island */
+.dynamic-island {
+  position: absolute;
+  top: 11px; left: 50%;
+  transform: translateX(-50%);
+  width: 124px; height: 34px;
+  background: #0A0908;
+  border-radius: 999px;
+  z-index: 100;
+}
+
+/* Status bar */
+.status-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 30px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  z-index: 50;
+  letter-spacing: -0.2px;
+  pointer-events: none;
+}
+.status-bar.on-dark { color: #fff; }
+.status-bar .time { font-weight: 600; }
+.status-bar .icons {
+  display: flex; gap: 5px; align-items: center;
+}
+.status-bar .signal-dots { display: flex; gap: 1.5px; align-items: flex-end; }
+.status-bar .signal-dots span {
+  width: 3px; background: currentColor; border-radius: 1px;
+}
+.status-bar .signal-dots span:nth-child(1) { height: 4px; }
+.status-bar .signal-dots span:nth-child(2) { height: 6px; }
+.status-bar .signal-dots span:nth-child(3) { height: 8px; }
+.status-bar .signal-dots span:nth-child(4) { height: 10px; }
+.status-bar .wifi { width: 15px; height: 11px; }
+.status-bar .battery {
+  width: 25px; height: 12px;
+  border: 1.2px solid currentColor;
+  border-radius: 3px;
+  position: relative; padding: 1px;
+}
+.status-bar .battery::after {
+  content: ""; position: absolute;
+  right: -3px; top: 50%; transform: translateY(-50%);
+  width: 1.5px; height: 5px; background: currentColor;
+  border-radius: 0 1px 1px 0;
+}
+.status-bar .battery .fill {
+  display: block; height: 100%; width: 70%;
+  background: currentColor; border-radius: 1px;
+}
+
+/* Home indicator */
+.home-indicator {
+  position: absolute;
+  bottom: 8px; left: 50%;
+  transform: translateX(-50%);
+  width: 134px; height: 5px;
+  background: var(--text-primary);
+  border-radius: 999px;
+  z-index: 60;
+}
+.home-indicator.on-dark { background: #fff; }
+
+/* =========================================================
+   SCREENS — state machine
+   ========================================================= */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  background: var(--bg-page);
+}
+.screen.is-active { display: flex; }
+
+.screen-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 54px; /* status bar */
+  scrollbar-width: none;
+}
+.screen-content::-webkit-scrollbar { display: none; }
+
+/* =========================================================
+   COMMON HEADER (For You / chat screens)
+   ========================================================= */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 70px 22px 8px;
+  position: relative;
+}
+.app-header .logo-mark {
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto;
+}
+.app-header .logo-mark svg { width: 52px; height: 52px; display: block; }
+.app-header .plus-btn {
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  background: var(--white);
+  border: 1.2px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.app-header .plus-btn:active, .app-header .plus-btn:hover {
+  background: var(--peach-50);
+  border-color: var(--peach-200);
+}
+
+/* Modal-style header (Profile, Insights, Health Journal full view) */
+.modal-header {
+  background: var(--dark-bg);
+  border-radius: 0 0 0 0;
+  padding: 16px 22px 18px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.modal-header .grabber {
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  width: 38px; height: 4px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 999px;
+}
+.modal-header .modal-title {
+  color: var(--peach);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-top: 8px;
+}
+.modal-header .modal-back {
+  position: absolute;
+  left: 16px; top: 50%;
+  transform: translateY(-30%);
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--peach);
+}
+.modal-header .modal-action {
+  position: absolute;
+  right: 16px; top: 50%;
+  transform: translateY(-30%);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--peach);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}
+
+/* =========================================================
+   LOGO (the K + heart)
+   ========================================================= */
+.logo-k {
+  width: 26px; height: 26px;
+  display: block;
+}
+
+/* =========================================================
+   PILL BUTTONS / TABS
+   ========================================================= */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--peach-50);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform .15s, background .15s;
+}
+.pill:active { transform: scale(0.97); }
+.pill svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.pill.peach-1 { background: var(--peach-300); }
+.pill.peach-2 { background: var(--peach-200); }
+.pill.peach-3 { background: var(--peach-100); }
+.pill.peach-4 { background: var(--peach-50); }
+
+.pill.tab {
+  background: var(--white);
+  border: 1.2px solid var(--gray-200);
+  padding: 7px 13px;
+  font-size: 12.5px;
+  font-weight: 500;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.pill.tab.is-active {
+  background: var(--dark-bg);
+  color: var(--text-on-dark);
+  border-color: var(--dark-bg);
+  font-weight: 600;
+}
+.pill.tab svg { stroke: currentColor; width: 14px; height: 14px; }
+
+/* Outline pill (e.g., gray-bordered choice button) */
+.pill-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* =========================================================
+   FOR YOU SCREEN
+   ========================================================= */
+.greeting {
+  padding: 14px 22px 0;
+  display: flex; align-items: center;
+  gap: 10px;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.greeting svg { width: 22px; height: 22px; color: var(--peach-deep); }
+
+.lead-text {
+  padding: 14px 22px 8px;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.canned-prompts {
+  padding: 14px 22px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+/* Canned prompts: pill shape with squared top-left corner (chat-bubble tail) */
+.canned-prompts .pill {
+  border-radius: 0 999px 999px 999px;
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 500;
+  gap: 10px;
+}
+.canned-prompts .pill svg { width: 18px; height: 18px; }
+
+/* =========================================================
+   TABS ROW — sits on white bg above the dark dock
+   Horizontally scrollable so additional pills fit cleanly.
+   ========================================================= */
+.tabs-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 18px 14px;
+  background: var(--bg-page);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs-row::-webkit-scrollbar { display: none; }
+
+/* =========================================================
+   BOTTOM DOCK (chat composer; expanded state shows tray icons)
+   ========================================================= */
+.bottom-dock {
+  background: var(--dock-bg);
+  padding: 14px 16px 28px;
+  flex-shrink: 0;
+  position: relative;
+  border-radius: 22px 22px 0 0;
+}
+
+/* Tray icons (only visible when dock is expanded) */
+.tray-icons {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 14px 6px 18px;
+  gap: 4px;
+}
+.tray-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 6px 4px;
+  font-family: inherit;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+.tray-icon svg {
+  width: 30px; height: 30px;
+  stroke: #fff;
+  stroke-width: 1.5;
+  fill: none;
+}
+.tray-icon .ti-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.tray-icon .ti-new {
+  position: absolute;
+  top: -2px;
+  right: 8%;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: var(--peach);
+  color: #1A1612;
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.tray-icon:active { opacity: 0.7; }
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--cream);
+  border-radius: 999px;
+  padding: 6px 6px 6px 6px;
+  position: relative;
+}
+.composer .plus-circle {
+  width: 38px; height: 38px;
+  border-radius: 999px;
+  background: var(--white);
+  border: 1.2px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.composer .input {
+  flex: 1;
+  font-size: 15px;
+  color: var(--gray-400);
+  padding: 0 4px;
+}
+.composer .send-btn {
+  width: 38px; height: 38px;
+  border-radius: 999px;
+  background: var(--dark-bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  border: 1.2px solid var(--dark-line);
+  cursor: pointer;
+}
+.composer .send-btn svg { color: #FFF; }
+
+.composer .alarm-badge {
+  width: 38px; height: 38px;
+  border-radius: 999px;
+  background: var(--peach-200);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-right: -2px;
+  position: relative;
+}
+
+.disclaimer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--gray-300);
+  margin-top: 12px;
+}
+
+/* =========================================================
+   HEALTH JOURNAL — main destination
+   ========================================================= */
+.hr-body {
+  padding: 18px 18px 30px;
+  background: var(--bg-soft);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.hr-hero {
+  background: linear-gradient(135deg, var(--peach-100) 0%, var(--peach-50) 100%);
+  border-radius: var(--radius-xl);
+  padding: 20px 20px 22px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.hr-hero::before {
+  content: "";
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: var(--peach-200);
+  opacity: 0.45;
+}
+.hr-hero-content { position: relative; z-index: 1; }
+.hr-hero-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--peach-deep);
+  margin-bottom: 8px;
+}
+.hr-hero-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.hr-hero-sub {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+.hr-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--dark-bg);
+  color: var(--white);
+  padding: 11px 18px 11px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.hr-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 22px 4px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hr-section-title .see-all {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--peach-deep);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  cursor: pointer;
+}
+
+/* Metric grid (mini cards) */
+.metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.metric-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 14px 14px 12px;
+  box-shadow: var(--shadow-card);
+}
+.metric-card .label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.metric-card .value {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+.metric-card .trend {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 28px;
+}
+.metric-card .trend .bar {
+  flex: 1;
+  background: var(--peach-200);
+  border-radius: 2px;
+  min-height: 4px;
+}
+.metric-card .trend .bar.is-now { background: var(--peach-deep); }
+
+.metric-card .delta {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* Report / saved cards list */
+.report-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  transition: transform .15s;
+}
+.report-card:active { transform: scale(0.985); }
+.report-card .rc-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--peach-100);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.report-card .rc-body { flex: 1; }
+.report-card .rc-title {
+  font-size: 15px; font-weight: 700;
+  letter-spacing: -0.2px;
+  margin-bottom: 2px;
+}
+.report-card .rc-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.report-card .rc-arrow {
+  color: var(--gray-300);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* Activity strip */
+.activity-strip {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 4px 0;
+  box-shadow: var(--shadow-card);
+}
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  align-items: flex-start;
+  border-bottom: 1px solid #F2EFEA;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-item .ai-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+.activity-item .ai-body { flex: 1; }
+.activity-item .ai-when {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: 2px;
+  letter-spacing: 0.02em;
+}
+.activity-item .ai-text {
+  font-size: 13.5px;
+  line-height: 1.42;
+  color: var(--text-primary);
+}
+.activity-item .ai-text em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+.activity-item .ai-source {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* =========================================================
+   REPORT (full PDF-style view)
+   ========================================================= */
+.report-body {
+  background: var(--bg-soft);
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 60px;
+}
+
+.report-paper {
+  background: var(--white);
+  margin: 16px;
+  border-radius: var(--radius-xl);
+  padding: 24px 22px 28px;
+  box-shadow: var(--shadow-card);
+}
+
+.report-paper + .report-paper { margin-top: 0; }
+
+.report-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--peach-deep);
+  margin-bottom: 12px;
+}
+.report-eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--peach-200);
+}
+.report-h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+.report-period {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 18px;
+}
+.report-summary {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.report-summary + .report-summary { margin-top: 12px; }
+
+.report-h2 {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  margin: 22px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Chart row */
+.chart-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 18px 4px 10px;
+  position: relative;
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: 10px;
+  min-height: 110px;
+}
+.chart-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.chart-bar {
+  width: 100%;
+  background: var(--peach-200);
+  border-radius: 6px;
+  position: relative;
+}
+.chart-bar.sev-1 { background: var(--sev-1); }
+.chart-bar.sev-2 { background: var(--sev-2); }
+.chart-bar.sev-3 { background: var(--sev-3); }
+.chart-bar.sev-4 { background: var(--sev-4); }
+.chart-bar.brown { background: var(--brown-chart-1); }
+.chart-bar.brown-light { background: var(--brown-chart-2); }
+.chart-bar.brown-lightest { background: var(--brown-chart-3); }
+
+.chart-x-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.chart-legend span {
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.chart-legend i {
+  width: 9px; height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* Quote / snippet */
+.snippet {
+  background: var(--cream-soft);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--peach);
+}
+.snippet .sn-text {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  font-style: italic;
+}
+.snippet .sn-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Stat row */
+.stat-row {
+  display: flex; gap: 10px; margin-bottom: 4px;
+}
+.stat-tile {
+  flex: 1;
+  background: var(--peach-50);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  border: 1px solid var(--peach-100);
+}
+.stat-tile .st-num {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: var(--peach-deep);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-tile .st-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Themes (narrative-only) */
+.theme-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--peach-100);
+  margin: 0 6px 6px 0;
+}
+
+/* Report action bar */
+.report-actions {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(to top, var(--bg-soft) 60%, rgba(247,244,240,0));
+  padding: 14px 16px 18px;
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.action-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1.2px solid var(--gray-200);
+  color: var(--text-primary);
+  padding: 13px 12px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: var(--shadow-card);
+}
+.action-btn.primary {
+  background: var(--dark-bg);
+  color: var(--white);
+  border-color: var(--dark-bg);
+}
+.action-btn svg { width: 16px; height: 16px; }
+
+/* =========================================================
+   BOTTOM SHEET (Summary picker, share sheet, + menu)
+   ========================================================= */
+.sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 16, 13, 0.45);
+  display: none;
+  align-items: flex-end;
+  z-index: 200;
+  animation: backdrop-in .2s ease-out;
+}
+.sheet-backdrop.is-active { display: flex; }
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sheet {
+  background: var(--white);
+  width: 100%;
+  border-radius: 28px 28px 0 0;
+  padding: 12px 20px 36px;
+  box-shadow: var(--shadow-lg);
+  animation: sheet-in .25s ease-out;
+}
+@keyframes sheet-in {
+  from { transform: translateY(20%); opacity: 0.5; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.sheet .sheet-grabber {
+  width: 38px; height: 4px;
+  background: var(--gray-200);
+  border-radius: 999px;
+  margin: 4px auto 14px;
+}
+.sheet-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  margin-bottom: 4px;
+  text-align: left;
+}
+.sheet-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 18px;
+  line-height: 1.4;
+}
+
+/* Sheet option rows */
+.sheet-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 4px;
+  border-bottom: 1px solid #F2EFEA;
+  cursor: pointer;
+  transition: background .15s;
+}
+.sheet-option:last-of-type { border-bottom: none; }
+.sheet-option:active { background: var(--peach-50); }
+.sheet-option .so-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--peach-100);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--peach-deep);
+}
+.sheet-option .so-body { flex: 1; }
+.sheet-option .so-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.sheet-option .so-sub {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.sheet-option .so-arrow { color: var(--gray-300); }
+
+/* =========================================================
+   CONVERSATION (chat messages)
+   ========================================================= */
+.chat-area {
+  padding: 0 18px 18px;
+  flex: 1;
+  overflow-y: auto;
+}
+.chat-msg-kai {
+  font-size: 16px;
+  line-height: 1.45;
+  margin-bottom: 12px;
+  padding: 14px 22px 4px;
+}
+.chat-msg-user {
+  background: var(--cream-soft);
+  border-radius: 22px 22px 4px 22px;
+  padding: 12px 16px;
+  margin: 8px 0 12px auto;
+  font-size: 15px;
+  line-height: 1.4;
+  max-width: 80%;
+  align-self: flex-end;
+  display: inline-block;
+  border: 1px solid #F2EFEA;
+}
+.chat-msg-user-wrap {
+  text-align: right;
+  padding: 0 22px;
+  margin-bottom: 6px;
+}
+
+.feedback-row {
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+  padding: 0 22px 8px;
+  color: var(--gray-400);
+}
+
+/* Inline report card in chat */
+.chat-report-card {
+  margin: 8px 22px 14px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px 14px;
+  box-shadow: var(--shadow-card-lift);
+  border: 1px solid #F2EFEA;
+  cursor: pointer;
+}
+.crc-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.crc-head .crc-icon {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  background: var(--peach-100);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--peach-deep);
+}
+.crc-head .crc-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.crc-head .crc-period {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+.crc-summary {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.crc-mini-stats {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.crc-mini-stat {
+  flex: 1;
+  text-align: center;
+  background: var(--peach-50);
+  border-radius: 10px;
+  padding: 8px 4px;
+}
+.crc-mini-stat .ms-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--peach-deep);
+  line-height: 1.1;
+}
+.crc-mini-stat .ms-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  font-weight: 600;
+}
+.crc-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--peach-deep);
+}
+
+/* =========================================================
+   SHARE SHEET specifics
+   ========================================================= */
+.share-recipients {
+  display: flex; gap: 10px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+.share-recipient {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  cursor: pointer;
+}
+.share-recipient .sr-avatar {
+  width: 56px; height: 56px;
+  border-radius: 999px;
+  background: var(--peach-100);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--peach-deep);
+  border: 1.5px solid var(--peach-200);
+}
+.share-recipient .sr-avatar.add {
+  background: var(--bg-soft);
+  border: 1.5px dashed var(--gray-300);
+  color: var(--gray-400);
+}
+.share-recipient .sr-name {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  max-width: 64px;
+  line-height: 1.2;
+}
+
+/* =========================================================
+   STATUS-BAR ON COLORED BG (when modal header is dark)
+   ========================================================= */
+.screen.has-dark-top .status-bar { color: #fff; }
+
+/* =========================================================
+   SMALL UTILITIES
+   ========================================================= */
+.text-tertiary { color: var(--text-tertiary); }
+.text-secondary { color: var(--text-secondary); }
+.spacer-12 { height: 12px; }
+.spacer-16 { height: 16px; }
+.spacer-24 { height: 24px; }
+
+/* Empty state */
+.empty-note {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  padding: 14px 16px;
+  background: var(--peach-50);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--peach);
+  margin: 12px 0;
+}
+.empty-note strong { color: var(--text-primary); }
+
+/* For You content wrap to keep nice padding when chat dock occupies bottom */
+.foryou-content { padding-bottom: 12px; }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="scenarios">
+    <div class="scenarios-label">Tap-through demo · use buttons to jump to scenes</div>
+    <button class="scenario-btn is-active" data-jump="home">1. Home + new tab</button>
+    <button class="scenario-btn" data-jump="plus-menu">2. + tray (apps)</button>
+    <button class="scenario-btn" data-jump="record-main">3. Health Journal</button>
+    <button class="scenario-btn" data-jump="gen-picker">4. Write a summary</button>
+    <button class="scenario-btn" data-jump="report-overall">5. Overall summary</button>
+    <button class="scenario-btn" data-jump="report-itching">6. Itching summary</button>
+    <button class="scenario-btn" data-jump="chat-conv">7. Ask in chat</button>
+    <button class="scenario-btn" data-jump="narrative-only">8. Edge: sparse data</button>
+    <button class="scenario-btn" data-jump="share-sheet-screen">9. Share with doctor</button>
+  </div>
+
+  <div class="phone">
+    <span class="vol2"></span>
+    <div class="screen-frame" id="screenFrame">
+
+      <!-- Dynamic island is persistent UI chrome -->
+      <div class="dynamic-island"></div>
+
+      <!-- All screens live here. Only .is-active is shown. -->
+      <!-- Status bar is rendered once per screen so it can adapt color. -->
+
+      <!-- =================== SCREEN: HOME (For You) =================== -->
+      <section class="screen is-active" id="screen-home">
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <span class="signal-dots"><span></span><span></span><span></span><span></span></span>
+            <svg class="wifi" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zM3.4 7.1c1.3-1.3 3-2 4.6-2s3.3.7 4.6 2l-1 1c-1-1-2.3-1.6-3.6-1.6S5.4 7.1 4.4 8.1l-1-1zM.8 4.5C2.7 2.6 5.3 1.5 8 1.5s5.3 1 7.2 3l-1 1C12.6 4 10.3 3 8 3S3.4 4 1.8 5.5l-1-1z"/></svg>
+            <span class="battery"><span class="fill"></span></span>
+          </span>
+        </div>
+
+        <header class="app-header">
+          <div style="width: 36px;"></div>
+          <div class="logo-mark">
+            <svg viewBox="0 0 1237 1237" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="618.062" cy="618.062" r="607.911" fill="#FEF8F4" stroke="#F5BF96" stroke-width="20.3013"/>
+              <path d="M881.792 656.895L846.271 618.09L881.792 579.293C942.09 513.411 942.09 406.237 881.792 340.363C821.486 274.49 723.376 274.49 663.084 340.363L428.748 596.366C417.766 608.356 417.766 627.809 428.748 639.807L663.084 895.81C692.296 927.715 731.13 945.296 772.438 945.296C813.746 945.296 852.58 927.722 881.792 895.81C910.996 863.904 927.083 821.472 927.083 776.352C927.083 731.233 910.996 688.793 881.792 656.888V656.895ZM842.02 852.384C823.432 872.699 798.724 883.873 772.431 883.873C746.137 883.873 721.437 872.691 702.841 852.384L488.384 618.098L702.841 383.812C741.21 341.896 803.644 341.896 842.013 383.812C860.602 404.12 870.837 431.119 870.837 459.836C870.837 488.553 860.602 515.552 842.013 535.852L890.311 481.858L851.498 346.73L740.163 317.695L649.257 414.852L454.577 618.09L663.084 858.86C772.438 924.093 857.225 883.756 881.792 812.685C858.298 812.685 860.602 832.084 842.013 852.384H842.02ZM589.47 858.853C562.951 910.395 512.443 945.311 454.577 945.311C369.303 945.311 299.932 869.526 299.932 776.368V459.836C299.932 366.678 369.303 290.893 454.577 290.893C512.436 290.893 562.951 325.809 589.47 377.351L547.195 423.526C533.541 382.064 497.182 352.331 454.577 352.331C400.312 352.331 356.17 400.562 356.17 459.844V776.376C356.17 835.657 400.312 883.881 454.577 883.881C497.182 883.881 533.541 854.147 547.195 812.685L589.47 858.86V858.853Z" fill="#FFBC8F"/>
+            </svg>
+          </div>
+          <button class="plus-btn" onclick="navigate('plus-menu')">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 4v10M4 9h10" stroke="#1A1612" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </header>
+
+        <div class="screen-content foryou-content" style="padding-top: 0;">
+          <div class="greeting">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" fill="#F7BC92" stroke="#E89358"/>
+            </svg>
+            <span>Good Evening, Chaz</span>
+          </div>
+
+          <p class="lead-text">
+            How was your evening dose? I noticed your itching has eased a bit this week — want to keep going?
+          </p>
+
+          <div class="canned-prompts">
+            <button class="pill peach-1" onclick="navigate('chat-conv')">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7.5"/><path d="M10 6v5M10 13.5v.5"/></svg>
+              Latest tough moment?
+            </button>
+            <button class="pill peach-2">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3.5 9c0-2.5 1.8-4.5 4-4.5 1.4 0 2.2.8 2.5 1.5.3-.7 1.1-1.5 2.5-1.5 2.2 0 4 2 4 4.5 0 3.5-3.5 5.5-6.5 8.5-3-3-6.5-5-6.5-8.5z"/><path d="M6 9.5h2l1-2 2 4 1-2h2"/></svg>
+              How's your itching today?
+            </button>
+            <button class="pill peach-3">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7.5"/><path d="M13 7l-2 5-4 1 2-5z"/></svg>
+              What helped you cope this week?
+            </button>
+            <!-- New CTA-style prompt that surfaces the Health Journal -->
+            <button class="pill" style="background: var(--peach-100); border: 1.5px dashed var(--peach-300);" onclick="navigate('chat-conv')">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M11 3v4h4M7 11h6M7 14h4"/></svg>
+              Look back at my journal
+            </button>
+          </div>
+        </div>
+
+        <div class="tabs-row">
+          <button class="pill tab is-active">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="6" r="3"/><path d="M3.5 15.5c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5"/></svg>
+            For You
+          </button>
+          <button class="pill tab" onclick="navigate('record-main')">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h6l3 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M11 3v4h4M8 11h5M8 13.5h3"/></svg>
+            Health Journal
+          </button>
+          <button class="pill tab">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3.5C6.8 3.5 5 5.3 5 7.5c0 .9.3 1.7.8 2.3-.5.6-.8 1.4-.8 2.2 0 1.5 1 2.7 2.3 3C7.5 16 8.2 16.5 9 16.5s1.5-.5 1.7-1.5c1.3-.3 2.3-1.5 2.3-3 0-.8-.3-1.6-.8-2.2.5-.6.8-1.4.8-2.3 0-2.2-1.8-4-4-4z"/><path d="M9 8v8M7 10h4M7 12.5h4"/></svg>
+            Insights
+          </button>
+          <button class="pill tab">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13l4-5 3 3 5-7"/><path d="M11 4h4v4"/></svg>
+            Weekly Check Ins
+          </button>
+        </div>
+
+        <div class="bottom-dock">
+          <div class="composer">
+            <button class="plus-circle" onclick="navigate('plus-menu')">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v8M4 8h8" stroke="#1A1612" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+            <span class="input">Ask anything</span>
+            <button class="send-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 13V3M4 7l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="disclaimer">Kai can make mistakes. Always ask your Doctor.</div>
+        </div>
+      </section>
+
+      <!-- =================== SCREEN: + EXPANDED TRAY =================== -->
+      <section class="screen" id="screen-plus-menu">
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <span class="signal-dots"><span></span><span></span><span></span><span></span></span>
+            <svg class="wifi" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zM3.4 7.1c1.3-1.3 3-2 4.6-2s3.3.7 4.6 2l-1 1c-1-1-2.3-1.6-3.6-1.6S5.4 7.1 4.4 8.1l-1-1zM.8 4.5C2.7 2.6 5.3 1.5 8 1.5s5.3 1 7.2 3l-1 1C12.6 4 10.3 3 8 3S3.4 4 1.8 5.5l-1-1z"/></svg>
+            <span class="battery"><span class="fill"></span></span>
+          </span>
+        </div>
+
+        <header class="app-header">
+          <div style="width: 36px;"></div>
+          <div class="logo-mark">
+            <svg viewBox="0 0 1237 1237" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="618.062" cy="618.062" r="607.911" fill="#FEF8F4" stroke="#F5BF96" stroke-width="20.3013"/>
+              <path d="M881.792 656.895L846.271 618.09L881.792 579.293C942.09 513.411 942.09 406.237 881.792 340.363C821.486 274.49 723.376 274.49 663.084 340.363L428.748 596.366C417.766 608.356 417.766 627.809 428.748 639.807L663.084 895.81C692.296 927.715 731.13 945.296 772.438 945.296C813.746 945.296 852.58 927.722 881.792 895.81C910.996 863.904 927.083 821.472 927.083 776.352C927.083 731.233 910.996 688.793 881.792 656.888V656.895ZM842.02 852.384C823.432 872.699 798.724 883.873 772.431 883.873C746.137 883.873 721.437 872.691 702.841 852.384L488.384 618.098L702.841 383.812C741.21 341.896 803.644 341.896 842.013 383.812C860.602 404.12 870.837 431.119 870.837 459.836C870.837 488.553 860.602 515.552 842.013 535.852L890.311 481.858L851.498 346.73L740.163 317.695L649.257 414.852L454.577 618.09L663.084 858.86C772.438 924.093 857.225 883.756 881.792 812.685C858.298 812.685 860.602 832.084 842.013 852.384H842.02ZM589.47 858.853C562.951 910.395 512.443 945.311 454.577 945.311C369.303 945.311 299.932 869.526 299.932 776.368V459.836C299.932 366.678 369.303 290.893 454.577 290.893C512.436 290.893 562.951 325.809 589.47 377.351L547.195 423.526C533.541 382.064 497.182 352.331 454.577 352.331C400.312 352.331 356.17 400.562 356.17 459.844V776.376C356.17 835.657 400.312 883.881 454.577 883.881C497.182 883.881 533.541 854.147 547.195 812.685L589.47 858.86V858.853Z" fill="#FFBC8F"/>
+            </svg>
+          </div>
+          <button class="plus-btn" onclick="navigate('home')">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 4v10M4 9h10" stroke="#1A1612" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </header>
+
+        <div class="screen-content foryou-content" style="padding-top: 0;" onclick="navigate('home')">
+          <div class="greeting">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" fill="#F7BC92" stroke="#E89358"/>
+            </svg>
+            <span>Good Evening, Chaz</span>
+          </div>
+
+          <p class="lead-text">
+            How was your evening dose? I noticed your itching has eased a bit this week — want to keep going?
+          </p>
+
+          <div class="canned-prompts">
+            <button class="pill peach-1">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7.5"/><path d="M10 6v5M10 13.5v.5"/></svg>
+              Latest tough moment?
+            </button>
+            <button class="pill peach-2">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3.5 9c0-2.5 1.8-4.5 4-4.5 1.4 0 2.2.8 2.5 1.5.3-.7 1.1-1.5 2.5-1.5 2.2 0 4 2 4 4.5 0 3.5-3.5 5.5-6.5 8.5-3-3-6.5-5-6.5-8.5z"/><path d="M6 9.5h2l1-2 2 4 1-2h2"/></svg>
+              How's your itching today?
+            </button>
+            <button class="pill peach-3">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7.5"/><path d="M13 7l-2 5-4 1 2-5z"/></svg>
+              What helped you cope this week?
+            </button>
+          </div>
+        </div>
+
+        <!-- Expanded dark dock with tray icons (no pills row in this state) -->
+        <div class="bottom-dock">
+          <div class="tray-icons">
+            <button class="tray-icon" onclick="navigate('record-main')">
+              <svg viewBox="0 0 30 30" fill="none"><path d="M9 5h11l5 5v17a2 2 0 01-2 2H9a2 2 0 01-2-2V7a2 2 0 012-2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 5v6h6M12 17h10M12 21h7" stroke-linecap="round"/></svg>
+              <span class="ti-label">Health Journal</span>
+              <span class="ti-new">NEW</span>
+            </button>
+            <button class="tray-icon">
+              <svg viewBox="0 0 30 30" fill="none"><rect x="10" y="4" width="10" height="22" rx="5" stroke-linecap="round"/><path d="M15 11l5 5" stroke-linecap="round"/></svg>
+              <span class="ti-label">Medications</span>
+            </button>
+            <button class="tray-icon">
+              <svg viewBox="0 0 30 30" fill="none"><path d="M15 5c-3.5 0-6 2.5-6 6 0 1.4.4 2.6 1.2 3.6-.8 1-1.2 2.2-1.2 3.6 0 2.5 1.8 4.6 4.1 5.1.3 1.5 1.5 2.7 3.1 2.7s2.8-1.2 3.1-2.7C20.6 22.8 22.4 20.7 22.4 18.2c0-1.4-.4-2.6-1.2-3.6.8-1 1.2-2.2 1.2-3.6 0-3.5-2.9-6-6.4-6z" stroke-linecap="round"/><path d="M15 13v11M12 16h6M12 19h6" stroke-linecap="round"/></svg>
+              <span class="ti-label">Insights</span>
+            </button>
+            <button class="tray-icon">
+              <svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="11" r="5" stroke-linecap="round"/><path d="M5 26c2.5-5 5.5-7 10-7s7.5 2 10 7" stroke-linecap="round"/></svg>
+              <span class="ti-label">Profile</span>
+            </button>
+          </div>
+
+          <div class="composer">
+            <span class="input" style="padding-left: 14px;">What's on your mind today?</span>
+            <button class="send-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 13V3M4 7l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="disclaimer">Kai can make mistakes. Always ask your Doctor.</div>
+        </div>
+      </section>
+
+      <!-- =================== SCREEN: HEALTH JOURNAL (main destination) =================== -->
+      <section class="screen has-dark-top" id="screen-record-main">
+        <div class="status-bar on-dark">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <span class="signal-dots"><span></span><span></span><span></span><span></span></span>
+            <svg class="wifi" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zM3.4 7.1c1.3-1.3 3-2 4.6-2s3.3.7 4.6 2l-1 1c-1-1-2.3-1.6-3.6-1.6S5.4 7.1 4.4 8.1l-1-1zM.8 4.5C2.7 2.6 5.3 1.5 8 1.5s5.3 1 7.2 3l-1 1C12.6 4 10.3 3 8 3S3.4 4 1.8 5.5l-1-1z"/></svg>
+            <span class="battery"><span class="fill"></span></span>
+          </span>
+        </div>
+
+        <div class="modal-header" style="padding-top: 54px; border-radius: 0;">
+          <div class="grabber" style="top: 58px;"></div>
+          <span class="modal-back" onclick="navigate('home')">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 5l-7 6 7 6"/></svg>
+          </span>
+          <span class="modal-title">Health Journal</span>
+        </div>
+
+        <div class="hr-body">
+          <!-- Hero -->
+          <div class="hr-hero">
+            <div class="hr-hero-content">
+              <div class="hr-hero-eyebrow">Your journal · 81 days with PBC</div>
+              <div class="hr-hero-title">The story so far.</div>
+              <p class="hr-hero-sub">Everything we've talked about — check-ins, conversations, medication moments — quietly kept here so the in-between days don't get lost.</p>
+              <button class="hr-hero-cta" onclick="openSheet('gen-picker')">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 3v12M3 9h12"/></svg>
+                Write a summary
+              </button>
+            </div>
+          </div>
+
+          <!-- Snapshot metrics -->
+          <div class="hr-section-title">
+            <span>This week's snapshot</span>
+            <span class="see-all">Last 4 weeks ›</span>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="label">Pain</div>
+              <div class="value">Mild · steady</div>
+              <div class="trend">
+                <span class="bar sev-2" style="height: 70%"></span>
+                <span class="bar sev-3" style="height: 90%"></span>
+                <span class="bar sev-1" style="height: 40%"></span>
+                <span class="bar sev-1 is-now" style="height: 35%"></span>
+              </div>
+              <div class="delta">4 check-ins this period</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="label">Itching</div>
+              <div class="value">A little · easing</div>
+              <div class="trend">
+                <span class="bar sev-3" style="height: 85%"></span>
+                <span class="bar sev-3" style="height: 80%"></span>
+                <span class="bar sev-2" style="height: 55%"></span>
+                <span class="bar sev-1 is-now" style="height: 35%"></span>
+              </div>
+              <div class="delta">↓ from "interferes with activity"</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="label">Sleep</div>
+              <div class="value">Decent</div>
+              <div class="trend">
+                <span class="bar brown-lightest" style="height: 60%"></span>
+                <span class="bar brown" style="height: 95%"></span>
+                <span class="bar brown-light" style="height: 70%"></span>
+                <span class="bar brown-light is-now" style="height: 75%"></span>
+              </div>
+              <div class="delta">1 restful week, 3 decent</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="label">Energy</div>
+              <div class="value">Moderate</div>
+              <div class="trend">
+                <span class="bar brown-light" style="height: 55%"></span>
+                <span class="bar brown-light" style="height: 55%"></span>
+                <span class="bar brown-light" style="height: 60%"></span>
+                <span class="bar brown is-now" style="height: 60%"></span>
+              </div>
+              <div class="delta">Holding steady</div>
+            </div>
+          </div>
+
+          <!-- Saved reports -->
+          <div class="hr-section-title">
+            <span>Saved summaries</span>
+            <span class="see-all">All ›</span>
+          </div>
+
+          <div class="report-card" onclick="navigate('report-overall')">
+            <div class="rc-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#E89358" stroke-width="1.6"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v4h4M7 11h6M7 14h4"/></svg>
+            </div>
+            <div class="rc-body">
+              <div class="rc-title">April — overall summary</div>
+              <div class="rc-meta">Generated May 1 · Apr 1–30 · Shared with Dr. Park</div>
+            </div>
+            <span class="rc-arrow">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <div class="report-card" onclick="navigate('report-itching')">
+            <div class="rc-icon" style="background: var(--peach-200);">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#B8643A" stroke-width="1.6"><path d="M3.5 9c0-2.5 1.8-4.5 4-4.5 1.4 0 2.2.8 2.5 1.5.3-.7 1.1-1.5 2.5-1.5 2.2 0 4 2 4 4.5 0 3.5-3.5 5.5-6.5 8.5-3-3-6.5-5-6.5-8.5z"/></svg>
+            </div>
+            <div class="rc-body">
+              <div class="rc-title">Itching — last 30 days</div>
+              <div class="rc-meta">Generated May 12 · Saved only</div>
+            </div>
+            <span class="rc-arrow">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <!-- Recent activity -->
+          <div class="hr-section-title">
+            <span>Journal highlights</span>
+            <span class="see-all">All entries ›</span>
+          </div>
+
+          <div class="activity-strip">
+            <div class="activity-item">
+              <span class="ai-dot" style="background: var(--peach-deep)"></span>
+              <div class="ai-body">
+                <div class="ai-when">Today · 7:36 AM · Check-in</div>
+                <div class="ai-text">Pain <strong>Mild (1–3)</strong> · Itch <em>"itches a little — doesn't interfere"</em> · Mood <strong>Neutral</strong></div>
+                <div class="ai-source">
+                  <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="10" height="10" rx="1"/><path d="M5 6h4M5 9h2"/></svg>
+                  Check-in entry
+                </div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <span class="ai-dot" style="background: var(--brown-chart-2)"></span>
+              <div class="ai-body">
+                <div class="ai-when">Yesterday · 9:14 PM · Conversation</div>
+                <div class="ai-text"><em>"Walked around the block twice before dinner — the lighter evenings are helping me actually want to move."</em></div>
+                <div class="ai-source">
+                  <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 6c0-2 1.5-3.5 3.5-3.5h3C10.5 2.5 12 4 12 6v2c0 1.5-1.5 3-3.5 3H5l-3 2V6z"/></svg>
+                  From a chat · tagged energy
+                </div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <span class="ai-dot" style="background: var(--peach-300)"></span>
+              <div class="ai-body">
+                <div class="ai-when">Sun · 5:21 PM · Medication</div>
+                <div class="ai-text">Solviden 50mg — taken at 5:24 PM (on time)</div>
+                <div class="ai-source">
+                  <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="5"/><path d="M5 7l1.5 1.5L9 6"/></svg>
+                  Medication entry
+                </div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <span class="ai-dot" style="background: var(--brown-chart-3)"></span>
+              <div class="ai-body">
+                <div class="ai-when">Sat · 8:02 AM · Conversation</div>
+                <div class="ai-text"><em>"Mornings are still the worst part — that hour right after waking is when the itch hits hardest."</em></div>
+                <div class="ai-source">
+                  <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 6c0-2 1.5-3.5 3.5-3.5h3C10.5 2.5 12 4 12 6v2c0 1.5-1.5 3-3.5 3H5l-3 2V6z"/></svg>
+                  From a chat · tagged itching
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 30px;"></div>
+        </div>
+      </section>
+
+      <!-- =================== SHEET: Summary picker (overlays record-main) =================== -->
+      <div class="sheet-backdrop" id="sheet-gen-picker" onclick="closeSheets(event)">
+        <div class="sheet" onclick="event.stopPropagation()">
+          <div class="sheet-grabber"></div>
+          <div class="sheet-title">What kind of summary?</div>
+          <div class="sheet-sub">I'll pull from your journal — check-ins, chats, and medication entries.</div>
+
+          <div class="sheet-option" onclick="closeSheets(); navigate('report-overall')">
+            <div class="so-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7"/><path d="M10 5v5l3 2"/></svg>
+            </div>
+            <div class="so-body">
+              <div class="so-title">Overall summary</div>
+              <div class="so-sub">The full picture — symptoms, mood, medications, and what's been hard or easier.</div>
+            </div>
+            <span class="so-arrow">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <div class="sheet-option" onclick="closeSheets(); navigate('report-itching')">
+            <div class="so-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 9c0-2.5 1.8-4.5 4-4.5 1.4 0 2.2.8 2.5 1.5.3-.7 1.1-1.5 2.5-1.5 2.2 0 4 2 4 4.5 0 3.5-3.5 5.5-6.5 8.5-3-3-6.5-5-6.5-8.5z"/></svg>
+            </div>
+            <div class="so-body">
+              <div class="so-title">A specific symptom</div>
+              <div class="so-sub">Pick one to focus on — itching, pain, fatigue, sleep, mood.</div>
+            </div>
+            <span class="so-arrow">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <div class="sheet-option" onclick="closeSheets(); navigate('narrative-only')">
+            <div class="so-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3h10v14H5z"/><path d="M8 7h4M8 10h4M8 13h2"/></svg>
+            </div>
+            <div class="so-body">
+              <div class="so-title">A narrative recap</div>
+              <div class="so-sub">Just the story — no charts. Drawn from how you've described things in chat.</div>
+            </div>
+            <span class="so-arrow">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <div style="margin-top: 14px; display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--text-secondary); background: var(--bg-soft); padding: 10px 12px; border-radius: 12px;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4v3l2 2"/></svg>
+            <span>Or just ask: "Kai, summarize my sleep from the journal."</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================== SCREEN: REPORT — Overall =================== -->
+      <section class="screen has-dark-top" id="screen-report-overall">
+        <div class="status-bar on-dark">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <span class="signal-dots"><span></span><span></span><span></span><span></span></span>
+            <svg class="wifi" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zM3.4 7.1c1.3-1.3 3-2 4.6-2s3.3.7 4.6 2l-1 1c-1-1-2.3-1.6-3.6-1.6S5.4 7.1 4.4 8.1l-1-1zM.8 4.5C2.7 2.6 5.3 1.5 8 1.5s5.3 1 7.2 3l-1 1C12.6 4 10.3 3 8 3S3.4 4 1.8 5.5l-1-1z"/></svg>
+            <span class="battery"><span class="fill"></span></span>
+          </span>
+        </div>
+
+        <div class="modal-header" style="padding-top: 54px;">
+          <div class="grabber" style="top: 58px;"></div>
+          <span class="modal-back" onclick="navigate('record-main')">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 5l-7 6 7 6"/></svg>
+          </span>
+          <span class="modal-title">Overall summary</span>
+          <button class="modal-action" onclick="openSheet('share-sheet')">
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" style="vertical-align: -3px;"><path d="M5 12v6a1 1 0 001 1h10a1 1 0 001-1v-6"/><path d="M11 13V3M7 7l4-4 4 4"/></svg>
+            Share
+          </button>
+        </div>
+
+        <div class="report-body">
+          <!-- Cover paper -->
+          <div class="report-paper">
+            <div class="report-eyebrow">
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M12 3v4h4"/></svg>
+              Journal summary · Overall
+            </div>
+            <div class="report-h1">What I've been hearing from you</div>
+            <div class="report-period">Chaz Mee · May 4 — May 17, 2026 · 14 days</div>
+
+            <p class="report-summary">
+              The past two weeks have been steadier than the two before. Your itching eased from "interferes with activity" to a milder background hum, and your evening pain settled back into the mild range. Sleep has held at decent, with one restful week mid-cycle.
+            </p>
+            <p class="report-summary">
+              What changed: you started taking the evening Solviden dose before 9 PM consistently — and the days that followed have been your best. Mornings are still where the itching hits hardest, which is worth telling Dr. Park.
+            </p>
+
+            <div class="report-h2">
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 14l4-5 3 3 6-8"/><path d="M11 4h4v4"/></svg>
+              Symptom trends
+            </div>
+
+            <!-- Itch chart -->
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px;">Itching</div>
+            <div class="chart-row">
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-3" style="height: 80px"></span>
+                <span class="chart-x-label">Apr 20</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-3" style="height: 75px"></span>
+                <span class="chart-x-label">Apr 27</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-2" style="height: 50px"></span>
+                <span class="chart-x-label">May 4</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-1" style="height: 32px"></span>
+                <span class="chart-x-label">May 11</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <span><i style="background:var(--sev-1)"></i> Itches a little</span>
+              <span><i style="background:var(--sev-2)"></i> Sometimes interferes</span>
+              <span><i style="background:var(--sev-3)"></i> Interferes with activity</span>
+            </div>
+
+            <!-- Pain chart -->
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.06em; text-transform: uppercase; margin: 22px 0 2px;">Pain</div>
+            <div class="chart-row">
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-1" style="height: 40px"></span>
+                <span class="chart-x-label">Apr 20</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-2" style="height: 65px"></span>
+                <span class="chart-x-label">Apr 27</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-1" style="height: 38px"></span>
+                <span class="chart-x-label">May 4</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-1" style="height: 35px"></span>
+                <span class="chart-x-label">May 11</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <span><i style="background:var(--sev-1)"></i> Mild (1–3)</span>
+              <span><i style="background:var(--sev-2)"></i> Moderate (4–6)</span>
+            </div>
+
+            <!-- Sleep + Mood + Energy summary tiles -->
+            <div class="report-h2" style="margin-top: 22px;">
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l2 1.5"/></svg>
+              How daily life has felt
+            </div>
+            <div class="stat-row">
+              <div class="stat-tile">
+                <div class="st-num">3<span style="font-size:14px;color:var(--text-secondary);"> of 4</span></div>
+                <div class="st-label">Weeks of decent sleep</div>
+              </div>
+              <div class="stat-tile">
+                <div class="st-num">Neutral</div>
+                <div class="st-label">Mood across all weeks</div>
+              </div>
+            </div>
+            <div class="stat-row" style="margin-top: 8px;">
+              <div class="stat-tile">
+                <div class="st-num">94%</div>
+                <div class="st-label">Doses taken on time</div>
+              </div>
+              <div class="stat-tile">
+                <div class="st-num">Easier</div>
+                <div class="st-label">Med routine trend</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversation snippets paper -->
+          <div class="report-paper" style="margin-top: 12px;">
+            <div class="report-eyebrow">
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6c0-2 1.5-3.5 3.5-3.5h5C13.5 2.5 15 4 15 6v3c0 1.5-1.5 3-3.5 3H6l-3 2V6z"/></svg>
+              In your own words
+            </div>
+            <div class="report-h1" style="font-size: 17px;">What you said out loud</div>
+            <div class="report-period">Pulled from conversations — moments that felt important</div>
+
+            <div class="snippet">
+              <div class="sn-text">"Mornings are still the worst part — that hour right after waking is when the itch hits hardest."</div>
+              <div class="sn-meta">May 16 · Conversation · Tagged <strong style="color: var(--peach-deep);">itching</strong></div>
+            </div>
+
+            <div class="snippet" style="border-left-color: var(--brown-chart-2); background: #F5F1ED;">
+              <div class="sn-text">"Walked around the block twice before dinner — the lighter evenings are helping me actually want to move."</div>
+              <div class="sn-meta">May 16 · Conversation · Tagged <strong style="color: var(--brown-chart-1);">energy</strong>, <strong style="color: var(--brown-chart-1);">mood</strong></div>
+            </div>
+
+            <div class="snippet">
+              <div class="sn-text">"Took the evening dose before 9 again — it's becoming a habit and I think I notice it."</div>
+              <div class="sn-meta">May 12 · Conversation · Tagged <strong style="color: var(--peach-deep);">medication</strong></div>
+            </div>
+
+            <div class="snippet" style="border-left-color: var(--brown-chart-2); background: #F5F1ED;">
+              <div class="sn-text">"I really don't know how to ask my family for help with this without making it weird."</div>
+              <div class="sn-meta">May 9 · Conversation · Tagged <strong style="color: var(--brown-chart-1);">support, emotional</strong></div>
+            </div>
+          </div>
+
+          <!-- Medications paper -->
+          <div class="report-paper" style="margin-top: 12px; margin-bottom: 0;">
+            <div class="report-eyebrow">
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="6" y="2" width="6" height="14" rx="3"/><path d="M9 7l3 3"/></svg>
+              Medications
+            </div>
+            <div class="report-h1" style="font-size: 17px;">What you've been taking</div>
+
+            <div style="background: var(--bg-soft); border-radius: 14px; padding: 14px 16px; margin-top: 10px;">
+              <div style="font-weight: 700; font-size: 14.5px;">Solviden · 50mg, twice daily</div>
+              <div style="font-size: 12.5px; color: var(--text-secondary); margin-top: 4px;">94% on-time · Evening doses before 9 PM correlated with better next-day energy</div>
+            </div>
+            <div style="background: var(--bg-soft); border-radius: 14px; padding: 14px 16px; margin-top: 8px;">
+              <div style="font-weight: 700; font-size: 14.5px;">Navirel · 10mg, once daily</div>
+              <div style="font-size: 12.5px; color: var(--text-secondary); margin-top: 4px;">100% adherence</div>
+            </div>
+            <div style="background: var(--bg-soft); border-radius: 14px; padding: 14px 16px; margin-top: 8px;">
+              <div style="font-weight: 700; font-size: 14.5px;">Merivon · 20mg, evening</div>
+              <div style="font-size: 12.5px; color: var(--text-secondary); margin-top: 4px;">3 missed doses · all on Saturdays</div>
+            </div>
+          </div>
+
+          <!-- Footer disclaimer -->
+          <div style="padding: 18px 30px; font-size: 11.5px; color: var(--text-tertiary); text-align: center; line-height: 1.4;">
+            Drawn from your Kai journal · May 18, 2026 · For reflection and conversation with your care team. Not medical advice.
+          </div>
+
+          <div class="report-actions">
+            <button class="action-btn" onclick="">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3v9M5 8l4 4 4-4M3 15h12"/></svg>
+              Save PDF
+            </button>
+            <button class="action-btn primary" onclick="openSheet('share-sheet')">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 10v5a1 1 0 001 1h8a1 1 0 001-1v-5"/><path d="M9 11V3M6 6l3-3 3 3"/></svg>
+              Share with doctor
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== SCREEN: REPORT — Itching (symptom-specific) =================== -->
+      <section class="screen has-dark-top" id="screen-report-itching">
+        <div class="status-bar on-dark">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <span class="signal-dots"><span></span><span></span><span></span><span></span></span>
+            <svg class="wifi" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zM3.4 7.1c1.3-1.3 3-2 4.6-2s3.3.7 4.6 2l-1 1c-1-1-2.3-1.6-3.6-1.6S5.4 7.1 4.4 8.1l-1-1zM.8 4.5C2.7 2.6 5.3 1.5 8 1.5s5.3 1 7.2 3l-1 1C12.6 4 10.3 3 8 3S3.4 4 1.8 5.5l-1-1z"/></svg>
+            <span class="battery"><span class="fill"></span></span>
+          </span>
+        </div>
+
+        <div class="modal-header" style="padding-top: 54px;">
+          <div class="grabber" style="top: 58px;"></div>
+          <span class="modal-back" onclick="navigate('record-main')">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 5l-7 6 7 6"/></svg>
+          </span>
+          <span class="modal-title">Itching · 30 days</span>
+          <button class="modal-action" onclick="openSheet('share-sheet')">
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" style="vertical-align: -3px;"><path d="M5 12v6a1 1 0 001 1h10a1 1 0 001-1v-6"/><path d="M11 13V3M7 7l4-4 4 4"/></svg>
+            Share
+          </button>
+        </div>
+
+        <div class="report-body">
+          <div class="report-paper">
+            <div class="report-eyebrow">
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3.5 9c0-2.5 1.8-4.5 4-4.5 1.4 0 2.2.8 2.5 1.5.3-.7 1.1-1.5 2.5-1.5 2.2 0 4 2 4 4.5 0 3.5-3.5 5.5-6.5 8.5-3-3-6.5-5-6.5-8.5z"/></svg>
+              Symptom focus · Itching
+            </div>
+            <div class="report-h1">Your itching, the past month</div>
+            <div class="report-period">Apr 18 — May 17 · 22 entries logged</div>
+
+            <p class="report-summary">
+              The first two weeks were the hardest — most days it interfered with what you were trying to do. Things eased by week three, and the last week has been steady at a "little, doesn't interfere" level. Mornings remain the toughest window.
+            </p>
+
+            <div class="report-h2">By week</div>
+            <div class="chart-row">
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-3" style="height: 90px"></span>
+                <span class="chart-x-label">Wk 1</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-3" style="height: 80px"></span>
+                <span class="chart-x-label">Wk 2</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-2" style="height: 55px"></span>
+                <span class="chart-x-label">Wk 3</span>
+              </div>
+              <div class="chart-bar-col">
+                <span class="chart-bar sev-1" style="height: 32px"></span>
+                <span class="chart-x-label">Wk 4</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <span><i style="background:var(--sev-1)"></i> A little</span>
+              <span><i style="background:var(--sev-2)"></i> Sometimes interferes</span>
+              <span><i style="background:var(--sev-3)"></i> Interferes</span>
+            </div>
+
+            <div class="report-h2" style="margin-top: 22px;">When it tends to hit</div>
+            <div class="stat-row">
+              <div class="stat-tile">
+                <div class="st-num">5–8 <span style="font-size:14px;">AM</span></div>
+                <div class="st-label">Most reported window</div>
+              </div>
+              <div class="stat-tile">
+                <div class="st-num">12 <span style="font-size:14px;color:var(--text-secondary);">of 22</span></div>
+                <div class="st-label">Logs mention "mornings"</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-paper" style="margin-top: 12px;">
+            <div class="report-eyebrow">
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6c0-2 1.5-3.5 3.5-3.5h5C13.5 2.5 15 4 15 6v3c0 1.5-1.5 3-3.5 3H6l-3 2V6z"/></svg>
+              Things you've said
+            </div>
+            <div class="report-h1" style="font-size: 17px;">The texture of it</div>
+
+            <div class="snippet">
+              <div class="sn-text">"Mornings are still the worst part — that hour right after waking is when the itch hits hardest."</div>
+              <div class="sn-meta">May 16</div>
+            </div>
+            <div class="snippet">
+              <div class="sn-text">"Cool shower in the morning genuinely helped — first time I've found something that takes the edge off."</div>
+              <div class="sn-meta">May 11</div>
+            </div>
+            <div class="snippet">
+              <div class="sn-text">"It was the kind of itch that made it hard to sit through the team call. I kept turning my camera off."</div>
+              <div class="sn-meta">Apr 28</div>
+            </div>
+
+            <div class="report-h2" style="margin-top: 18px;">What seemed to help</div>
+            <div style="display: flex; flex-wrap: wrap;">
+              <span class="theme-tag">🚿 Cool morning shower</span>
+              <span class="theme-tag">💊 Evening dose before 9 PM</span>
+              <span class="theme-tag">🌙 Cooler sleeping room</span>
+              <span class="theme-tag">👕 Loose cotton in mornings</span>
+            </div>
+
+            <div class="report-h2" style="margin-top: 22px;">What seemed to make it worse</div>
+            <div style="display: flex; flex-wrap: wrap;">
+              <span class="theme-tag" style="background: #F2EBE5;">☕ Hot drinks first thing</span>
+              <span class="theme-tag" style="background: #F2EBE5;">😴 Nights below 6 hrs</span>
+              <span class="theme-tag" style="background: #F2EBE5;">🧖 Hot showers</span>
+            </div>
+          </div>
+
+          <div style="padding: 18px 30px; font-size: 11.5px; color: var(--text-tertiary); text-align: center; line-height: 1.4;">
+            Drawn from your Kai journal · May 18, 2026 · Not medical advice.
+          </div>
+
+          <div class="report-actions">
+            <button class="action-btn">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3v9M5 8l4 4 4-4M3 15h12"/></svg>
+              Save PDF
+            </button>
+            <button class="action-btn primary" onclick="openSheet('share-sheet')">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 10v5a1 1 0 001 1h8a1 1 0 001-1v-5"/><path d="M9 11V3M6 6l3-3 3 3"/></svg>
+              Share with doctor
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== SCREEN: CHAT — conversational ask =================== -->
+      <section class="screen" id="screen-chat-conv">
+        <div class="status-bar">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <span class="signal-dots"><span></span><span></span><span></span><span></span></span>
+            <svg class="wifi" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zM3.4 7.1c1.3-1.3 3-2 4.6-2s3.3.7 4.6 2l-1 1c-1-1-2.3-1.6-3.6-1.6S5.4 7.1 4.4 8.1l-1-1zM.8 4.5C2.7 2.6 5.3 1.5 8 1.5s5.3 1 7.2 3l-1 1C12.6 4 10.3 3 8 3S3.4 4 1.8 5.5l-1-1z"/></svg>
+            <span class="battery"><span class="fill"></span></span>
+          </span>
+        </div>
+
+        <header class="app-header">
+          <div style="width: 36px;"></div>
+          <div class="logo-mark">
+            <svg viewBox="0 0 1237 1237" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="618.062" cy="618.062" r="607.911" fill="#FEF8F4" stroke="#F5BF96" stroke-width="20.3013"/>
+              <path d="M881.792 656.895L846.271 618.09L881.792 579.293C942.09 513.411 942.09 406.237 881.792 340.363C821.486 274.49 723.376 274.49 663.084 340.363L428.748 596.366C417.766 608.356 417.766 627.809 428.748 639.807L663.084 895.81C692.296 927.715 731.13 945.296 772.438 945.296C813.746 945.296 852.58 927.722 881.792 895.81C910.996 863.904 927.083 821.472 927.083 776.352C927.083 731.233 910.996 688.793 881.792 656.888V656.895ZM842.02 852.384C823.432 872.699 798.724 883.873 772.431 883.873C746.137 883.873 721.437 872.691 702.841 852.384L488.384 618.098L702.841 383.812C741.21 341.896 803.644 341.896 842.013 383.812C860.602 404.12 870.837 431.119 870.837 459.836C870.837 488.553 860.602 515.552 842.013 535.852L890.311 481.858L851.498 346.73L740.163 317.695L649.257 414.852L454.577 618.09L663.084 858.86C772.438 924.093 857.225 883.756 881.792 812.685C858.298 812.685 860.602 832.084 842.013 852.384H842.02ZM589.47 858.853C562.951 910.395 512.443 945.311 454.577 945.311C369.303 945.311 299.932 869.526 299.932 776.368V459.836C299.932 366.678 369.303 290.893 454.577 290.893C512.436 290.893 562.951 325.809 589.47 377.351L547.195 423.526C533.541 382.064 497.182 352.331 454.577 352.331C400.312 352.331 356.17 400.562 356.17 459.844V776.376C356.17 835.657 400.312 883.881 454.577 883.881C497.182 883.881 533.541 854.147 547.195 812.685L589.47 858.86V858.853Z" fill="#FFBC8F"/>
+            </svg>
+          </div>
+          <button class="plus-btn" onclick="navigate('plus-menu')">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 4v10M4 9h10" stroke="#1A1612" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+
+        <div class="screen-content" style="padding-top: 0;">
+          <!-- User message -->
+          <div class="chat-msg-user-wrap">
+            <span class="chat-msg-user">Can you summarize how my itching has been? Last few weeks.</span>
+          </div>
+
+          <!-- Kai's response -->
+          <div class="chat-msg-kai">
+            Yes — there are 22 itching entries in your journal from the last 30 days. Here's what stands out:
+          </div>
+
+          <!-- Inline report card -->
+          <div class="chat-report-card" onclick="navigate('report-itching')">
+            <div class="crc-head">
+              <div class="crc-icon">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3.5 9c0-2.5 1.8-4.5 4-4.5 1.4 0 2.2.8 2.5 1.5.3-.7 1.1-1.5 2.5-1.5 2.2 0 4 2 4 4.5 0 3.5-3.5 5.5-6.5 8.5-3-3-6.5-5-6.5-8.5z"/></svg>
+              </div>
+              <div>
+                <div class="crc-title">Itching summary · last 30 days</div>
+                <div class="crc-period">Apr 18 – May 17 · 22 entries</div>
+              </div>
+            </div>
+
+            <p class="crc-summary">
+              Tough start, gentler finish. Weeks 1–2 interfered with activity, then it eased. Mornings (5–8 AM) remain the hardest stretch.
+            </p>
+
+            <div class="crc-mini-stats">
+              <div class="crc-mini-stat">
+                <div class="ms-num">↓ 2</div>
+                <div class="ms-label">Severity levels</div>
+              </div>
+              <div class="crc-mini-stat">
+                <div class="ms-num">12</div>
+                <div class="ms-label">Mentions "mornings"</div>
+              </div>
+              <div class="crc-mini-stat">
+                <div class="ms-num">4</div>
+                <div class="ms-label">Things that helped</div>
+              </div>
+            </div>
+
+            <span class="crc-cta">
+              Open full report
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <!-- Follow-up actions -->
+          <div style="padding: 6px 22px 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+            <button class="pill peach-3">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 10v5a1 1 0 001 1h10a1 1 0 001-1v-5"/><path d="M10 11V3M6 6l4-4 4 4"/></svg>
+              Save and share with Dr. Park
+            </button>
+            <button class="pill peach-4">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 10c0-2 1.5-3.5 3.5-3.5h7C15.5 6.5 17 8 17 10v3c0 1.5-1.5 3-3.5 3H6l-3 2v-8z"/></svg>
+              Tell me more about the morning pattern
+            </button>
+          </div>
+
+          <div class="feedback-row" style="margin-top: 16px;">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 9v8H4V9zM7 9l4-6 2 1v3h4l-1 8H7"/></svg>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 11V3h3v8zM13 11l-4 6-2-1v-3H3l1-8h9"/></svg>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7"/><path d="M10 7v3.5M10 12.5v.5"/></svg>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 17V3h8l-2 4 2 4H5"/></svg>
+          </div>
+        </div>
+
+        <div class="tabs-row">
+          <button class="pill tab is-active">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="6" r="3"/><path d="M3.5 15.5c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5"/></svg>
+            For You
+          </button>
+          <button class="pill tab" onclick="navigate('record-main')">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h6l3 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M11 3v4h4M8 11h5M8 13.5h3"/></svg>
+            Health Journal
+          </button>
+          <button class="pill tab">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3.5C6.8 3.5 5 5.3 5 7.5c0 .9.3 1.7.8 2.3-.5.6-.8 1.4-.8 2.2 0 1.5 1 2.7 2.3 3C7.5 16 8.2 16.5 9 16.5s1.5-.5 1.7-1.5c1.3-.3 2.3-1.5 2.3-3 0-.8-.3-1.6-.8-2.2.5-.6.8-1.4.8-2.3 0-2.2-1.8-4-4-4z"/></svg>
+            Insights
+          </button>
+          <button class="pill tab">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13l4-5 3 3 5-7"/></svg>
+            Weekly Check Ins
+          </button>
+        </div>
+
+        <div class="bottom-dock">
+          <div class="composer">
+            <button class="plus-circle" onclick="navigate('plus-menu')">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v8M4 8h8" stroke="#1A1612" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+            <span class="input">Ask anything</span>
+            <button class="send-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 13V3M4 7l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="disclaimer">Kai can make mistakes. Always ask your Doctor.</div>
+        </div>
+      </section>
+
+      <!-- =================== SCREEN: NARRATIVE-ONLY (edge case: sparse data) =================== -->
+      <section class="screen has-dark-top" id="screen-narrative-only">
+        <div class="status-bar on-dark">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <span class="signal-dots"><span></span><span></span><span></span><span></span></span>
+            <svg class="wifi" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zM3.4 7.1c1.3-1.3 3-2 4.6-2s3.3.7 4.6 2l-1 1c-1-1-2.3-1.6-3.6-1.6S5.4 7.1 4.4 8.1l-1-1zM.8 4.5C2.7 2.6 5.3 1.5 8 1.5s5.3 1 7.2 3l-1 1C12.6 4 10.3 3 8 3S3.4 4 1.8 5.5l-1-1z"/></svg>
+            <span class="battery"><span class="fill"></span></span>
+          </span>
+        </div>
+
+        <div class="modal-header" style="padding-top: 54px;">
+          <div class="grabber" style="top: 58px;"></div>
+          <span class="modal-back" onclick="navigate('record-main')">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 5l-7 6 7 6"/></svg>
+          </span>
+          <span class="modal-title">A first read</span>
+          <button class="modal-action" onclick="openSheet('share-sheet')">
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" style="vertical-align: -3px;"><path d="M5 12v6a1 1 0 001 1h10a1 1 0 001-1v-6"/><path d="M11 13V3M7 7l4-4 4 4"/></svg>
+            Share
+          </button>
+        </div>
+
+        <div class="report-body">
+          <div class="report-paper">
+            <div class="report-eyebrow">
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h10v14H5z"/><path d="M8 7h4M8 10h4M8 13h2"/></svg>
+              Narrative recap
+            </div>
+            <div class="report-h1">Early days — here's what I'm hearing</div>
+            <div class="report-period">May 11 — May 17 · 6 days · 2 check-ins</div>
+
+            <div class="empty-note">
+              <strong>Heads up:</strong> the journal is still young — about a week of entries. Charts need more to be meaningful, so this summary is the story side: what you've told me, in your words.
+            </div>
+
+            <p class="report-summary">
+              From the conversations so far, three things keep coming up: the <strong>fatigue is heavier than you expected</strong>, getting the <strong>meal-and-meds rhythm</strong> right has been the hardest practical piece, and you're trying to figure out who in your life you can actually <strong>talk to about it</strong>.
+            </p>
+            <p class="report-summary">
+              You've mentioned wanting "a normal day" twice. That's worth flagging — not as a problem, but as the thing you keep coming back to.
+            </p>
+
+            <div class="report-h2" style="margin-top: 20px;">Themes I'm noticing</div>
+            <div style="display: flex; flex-wrap: wrap;">
+              <span class="theme-tag">😴 Fatigue heavier than expected</span>
+              <span class="theme-tag">🍽️ Meal timing + meds</span>
+              <span class="theme-tag">🤝 Wanting someone to talk to</span>
+              <span class="theme-tag">🌅 "A normal day"</span>
+            </div>
+          </div>
+
+          <div class="report-paper" style="margin-top: 12px;">
+            <div class="report-eyebrow">
+              <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6c0-2 1.5-3.5 3.5-3.5h5C13.5 2.5 15 4 15 6v3c0 1.5-1.5 3-3.5 3H6l-3 2V6z"/></svg>
+              In your words
+            </div>
+            <div class="report-h1" style="font-size: 17px;">What you've said this week</div>
+
+            <div class="snippet">
+              <div class="sn-text">"I keep waiting to feel normal again. Even just one normal day would help."</div>
+              <div class="sn-meta">May 15 · Conversation</div>
+            </div>
+            <div class="snippet">
+              <div class="sn-text">"The hardest thing isn't the symptoms, honestly — it's not knowing what to expect tomorrow."</div>
+              <div class="sn-meta">May 13 · Conversation</div>
+            </div>
+            <div class="snippet">
+              <div class="sn-text">"Took the morning dose with toast and felt much better than yesterday on an empty stomach."</div>
+              <div class="sn-meta">May 12 · Conversation</div>
+            </div>
+          </div>
+
+          <div class="report-paper" style="margin-top: 12px; margin-bottom: 0;">
+            <div class="report-eyebrow">Next</div>
+            <div class="report-h1" style="font-size: 17px;">A few quick check-ins would help</div>
+            <p class="report-summary" style="font-size: 14px;">
+              If you can do a daily check-in for the next 7–10 days, I'll be able to show you trends — symptom patterns, what helps, what wears you down. It only takes a minute.
+            </p>
+
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+              <button class="action-btn primary" style="flex: 1.2;">
+                <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l3 1.5"/></svg>
+                Start daily check-ins
+              </button>
+              <button class="action-btn" style="flex: 1;">Not now</button>
+            </div>
+          </div>
+
+          <div style="padding: 18px 30px; font-size: 11.5px; color: var(--text-tertiary); text-align: center; line-height: 1.4;">
+            Drawn from your Kai journal · May 18, 2026 · A working draft as you and Kai get to know each other.
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== SHEET: Share with doctor =================== -->
+      <div class="sheet-backdrop" id="sheet-share-sheet" onclick="closeSheets(event)">
+        <div class="sheet" onclick="event.stopPropagation()">
+          <div class="sheet-grabber"></div>
+          <div class="sheet-title">Share this report</div>
+          <div class="sheet-sub">A PDF copy will be sent. Kai never shares anything without you tapping send.</div>
+
+          <div class="share-recipients">
+            <div class="share-recipient">
+              <div class="sr-avatar">DP</div>
+              <span class="sr-name">Dr. Park<br/>Hepatology</span>
+            </div>
+            <div class="share-recipient">
+              <div class="sr-avatar" style="background: var(--peach-200);">RC</div>
+              <span class="sr-name">Rachel Chen<br/>Care nurse</span>
+            </div>
+            <div class="share-recipient">
+              <div class="sr-avatar add">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 5v10M5 10h10"/></svg>
+              </div>
+              <span class="sr-name">Add someone</span>
+            </div>
+          </div>
+
+          <div class="sheet-option" style="border-top: 1px solid #F2EFEA;">
+            <div class="so-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M3 7l7 4 7-4"/></svg>
+            </div>
+            <div class="so-body">
+              <div class="so-title">Email PDF</div>
+              <div class="so-sub">To dr.park@willowcreekhealth.com</div>
+            </div>
+            <span class="so-arrow">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <div class="sheet-option">
+            <div class="so-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h10a1 1 0 011 1v10a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/><path d="M8 9l2 2 4-4"/></svg>
+            </div>
+            <div class="so-body">
+              <div class="so-title">Save to Willow Creek patient portal</div>
+              <div class="so-sub">Sends straight to Dr. Park's inbox there</div>
+            </div>
+            <span class="so-arrow">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <div class="sheet-option">
+            <div class="so-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3v9M6 8l4 4 4-4M3 16h14"/></svg>
+            </div>
+            <div class="so-body">
+              <div class="so-title">Download PDF</div>
+              <div class="so-sub">Save to your files or print</div>
+            </div>
+            <span class="so-arrow">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3l4 4-4 4"/></svg>
+            </span>
+          </div>
+
+          <div style="margin-top: 14px; padding: 12px 14px; background: var(--peach-50); border-radius: 12px; font-size: 12.5px; line-height: 1.42; color: var(--text-secondary);">
+            <strong style="color: var(--text-primary);">Before you share:</strong> the report includes things you've said in chat. Take a quick look on the previous screen if you'd like to remove anything personal.
+          </div>
+        </div>
+      </div>
+
+      <!-- A dedicated "share sheet" screen that opens the share sheet on top of the overall report. -->
+      <section class="screen has-dark-top" id="screen-share-sheet-screen">
+        <!-- Reuse overall-report under the share sheet -->
+      </section>
+
+    </div><!-- /.screen-frame -->
+  </div><!-- /.phone -->
+
+</div><!-- /.page -->
+
+<script>
+// =========================================================
+// STATE MACHINE — screen navigation + sheet handling
+// =========================================================
+
+const screens = ['home','plus-menu','record-main','report-overall','report-itching','chat-conv','narrative-only','share-sheet-screen'];
+
+function navigate(target) {
+  // Hide all sheets
+  document.querySelectorAll('.sheet-backdrop').forEach(s => s.classList.remove('is-active'));
+
+  // Special composite cases
+  if (target === 'share-sheet-screen') {
+    activateScreen('report-overall');
+    setTimeout(() => openSheet('share-sheet'), 80);
+  } else if (target === 'gen-picker') {
+    activateScreen('record-main');
+    setTimeout(() => openSheet('gen-picker'), 80);
+  } else {
+    activateScreen(target);
+  }
+
+  // Update scenario button states
+  document.querySelectorAll('.scenario-btn').forEach(b => {
+    b.classList.toggle('is-active', b.dataset.jump === target);
+  });
+
+  // Reset scroll on the new screen
+  const active = document.querySelector('.screen.is-active');
+  if (active) {
+    const scroller = active.querySelector('.hr-body, .report-body, .screen-content');
+    if (scroller) scroller.scrollTop = 0;
+  }
+}
+
+function activateScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('is-active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) el.classList.add('is-active');
+}
+
+function openSheet(id) {
+  const sheet = document.getElementById('sheet-' + id);
+  if (sheet) sheet.classList.add('is-active');
+}
+
+function closeSheets(e) {
+  if (e && e.target.closest('.sheet')) return;
+  document.querySelectorAll('.sheet-backdrop').forEach(s => s.classList.remove('is-active'));
+}
+
+// Wire scenario buttons (single listener handles all cases via navigate)
+document.querySelectorAll('.scenario-btn').forEach(btn => {
+  btn.addEventListener('click', () => navigate(btn.dataset.jump));
+});
+
+</script>
+
+</body>
+</html>

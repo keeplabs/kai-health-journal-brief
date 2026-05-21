@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kai · Health Journal — Design Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   KAI HEALTH JOURNAL — DESIGN BRIEF
+   Editorial layout. Calm, considered, anchored in Kai's
+   design language (peach, cream, warm neutrals).
+   ========================================================= */
+
+:root {
+  --peach: #F5A472;
+  --peach-deep: #E89358;
+  --peach-300: #F7BC92;
+  --peach-200: #FBDDC0;
+  --peach-100: #FCEAD4;
+  --peach-50: #FDF1E2;
+
+  --cream: #FBF0E3;
+  --cream-soft: #FCF5EC;
+  --paper: #FAF7F2;
+
+  --ink: #1A1612;
+  --ink-2: #3A332E;
+  --ink-3: #6B6764;
+  --ink-4: #9C9893;
+  --hairline: #E8E2D9;
+
+  --dock: #2A2C31;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Manrope', -apple-system, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   TYPOGRAPHY
+   ========================================================= */
+.serif {
+  font-family: 'Fraunces', Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+
+.eyebrow {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--peach-deep);
+}
+
+.h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: clamp(40px, 6.5vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+.h1 em {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--peach-deep);
+}
+
+.h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: clamp(28px, 3.5vw, 42px);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+}
+.h2 em {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.lede {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(20px, 2.1vw, 24px);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--ink-2);
+}
+
+p { font-size: 17px; line-height: 1.65; color: var(--ink-2); }
+p + p { margin-top: 1em; }
+
+strong { font-weight: 700; color: var(--ink); }
+
+a {
+  color: var(--peach-deep);
+  text-decoration: none;
+  border-bottom: 1px solid var(--peach-200);
+  transition: border-color .15s, color .15s;
+}
+a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.page-narrow {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+section { padding: 90px 0; }
+section.tight { padding: 64px 0; }
+
+/* =========================================================
+   TOP NAV STRIP
+   ========================================================= */
+.topbar {
+  border-bottom: 1px solid var(--hairline);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  background: rgba(250, 247, 242, 0.85);
+}
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.brand-meta {
+  color: var(--ink-4);
+  font-family: 'Manrope', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-left: 4px;
+  padding-left: 12px;
+  border-left: 1px solid var(--hairline);
+}
+.brand svg { width: 32px; height: 32px; }
+
+.topbar-nav {
+  display: flex;
+  gap: 28px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.topbar-nav a {
+  border: none;
+  color: var(--ink-3);
+}
+.topbar-nav a:hover { color: var(--ink); }
+@media (max-width: 700px) {
+  .topbar-nav { display: none; }
+  .brand-meta { display: none; }
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+.hero {
+  padding: 110px 0 90px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 80px;
+  align-items: end;
+}
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+}
+.hero .eyebrow {
+  margin-bottom: 24px;
+}
+.hero .h1 { margin-bottom: 32px; max-width: 14ch; }
+.hero .lede { max-width: 38ch; }
+
+.hero-right {
+  background: var(--cream-soft);
+  border-radius: 24px;
+  padding: 28px 28px 30px;
+  border: 1px solid var(--peach-100);
+  position: relative;
+}
+.hero-right::before {
+  content: "";
+  position: absolute;
+  top: -1px; right: -1px;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle at top right, var(--peach-100), transparent 70%);
+  border-radius: 0 24px 0 0;
+  pointer-events: none;
+}
+.hero-right h4 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--peach-deep);
+  margin-bottom: 14px;
+}
+.hero-right ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hero-right li {
+  display: flex; gap: 12px; align-items: flex-start;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.hero-right li .num {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--peach-deep);
+  font-size: 18px;
+  line-height: 1;
+  width: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.hero-right .meta {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--peach-100);
+  font-size: 12px;
+  color: var(--ink-4);
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   OPPORTUNITY (split for patient/caregiver)
+   ========================================================= */
+.opportunity {
+  background: var(--ink);
+  color: #F5F1EC;
+  margin: 0;
+}
+.opportunity .eyebrow { color: var(--peach-300); }
+.opportunity .h2 { color: #FBF8F4; margin-bottom: 28px; max-width: 22ch; }
+.opportunity .h2 em { color: var(--peach-300); }
+.opportunity .lede { color: rgba(245, 241, 236, 0.78); max-width: 56ch; margin-bottom: 64px; }
+
+.opportunity-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  border-top: 1px solid rgba(245, 241, 236, 0.12);
+  padding-top: 48px;
+}
+@media (max-width: 800px) {
+  .opportunity-split { grid-template-columns: 1fr; gap: 40px; }
+}
+.opp-col h3 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--peach-300);
+  margin-bottom: 18px;
+}
+.opp-col .who {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 500;
+  font-style: italic;
+  margin-bottom: 18px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #FBF8F4;
+}
+.opp-col p {
+  color: rgba(245, 241, 236, 0.75);
+  font-size: 16px;
+  line-height: 1.65;
+}
+.opp-col p strong { color: #FBF8F4; }
+
+/* =========================================================
+   PULLED QUOTE
+   ========================================================= */
+.pull-quote {
+  background: var(--paper);
+  padding: 110px 0;
+  text-align: center;
+}
+.pull-quote .mark {
+  font-family: 'Fraunces', serif;
+  font-size: 120px;
+  font-style: italic;
+  color: var(--peach-200);
+  line-height: 0.5;
+  display: block;
+  margin-bottom: 24px;
+  letter-spacing: -0.04em;
+}
+.pull-quote blockquote {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(26px, 3.6vw, 38px);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  max-width: 24ch;
+  margin: 0 auto;
+  color: var(--ink);
+}
+.pull-quote cite {
+  display: block;
+  margin-top: 32px;
+  font-family: 'Manrope', sans-serif;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+/* =========================================================
+   JOB STORIES
+   ========================================================= */
+.stories .h2 { margin-bottom: 16px; max-width: 18ch; }
+.stories .lede { margin-bottom: 64px; max-width: 52ch; }
+
+.story {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 56px;
+  padding: 48px 0;
+  border-top: 1px solid var(--hairline);
+}
+.story:last-child { border-bottom: 1px solid var(--hairline); }
+@media (max-width: 800px) {
+  .story { grid-template-columns: 1fr; gap: 24px; }
+}
+
+.story-meta {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+.story-meta .index {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 64px;
+  line-height: 1;
+  color: var(--peach-200);
+  letter-spacing: -0.04em;
+}
+.story-meta .role {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 24px;
+  margin-top: 14px;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+.story-meta .role-sub {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.story-body {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.story-line {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 24px;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--hairline);
+  align-items: baseline;
+}
+.story-line:last-child { border-bottom: none; padding-bottom: 0; }
+.story-line .key {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--peach-deep);
+  padding-top: 6px;
+  font-style: normal;
+}
+.story-line .val { color: var(--ink); font-weight: 400; }
+.story-line .val em {
+  font-style: italic;
+  color: var(--peach-deep);
+  font-weight: 500;
+}
+@media (max-width: 600px) {
+  .story-line { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* =========================================================
+   ACCEPTANCE
+   ========================================================= */
+.acceptance { background: var(--cream-soft); border-top: 1px solid var(--peach-100); }
+.acceptance .h2 { margin-bottom: 16px; max-width: 22ch; }
+.acceptance .lede { margin-bottom: 64px; max-width: 56ch; }
+
+.criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (max-width: 700px) {
+  .criteria-grid { grid-template-columns: 1fr; }
+}
+
+.criterion {
+  background: #fff;
+  border: 1px solid var(--peach-100);
+  border-radius: 18px;
+  padding: 28px 28px 26px;
+  position: relative;
+}
+.criterion .num {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 36px;
+  color: var(--peach-300);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  margin-bottom: 16px;
+  display: block;
+}
+.criterion h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: -0.015em;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.criterion p {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+
+/* =========================================================
+   PROTOTYPE LINK SECTION
+   ========================================================= */
+.proto {
+  background: var(--ink);
+  color: #F5F1EC;
+}
+.proto .eyebrow { color: var(--peach-300); }
+.proto .h2 { color: #FBF8F4; margin-bottom: 16px; max-width: 18ch; }
+.proto .h2 em { color: var(--peach-300); }
+.proto .lede { color: rgba(245, 241, 236, 0.78); margin-bottom: 56px; max-width: 50ch; }
+
+.proto-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--peach);
+  color: var(--ink);
+  padding: 18px 26px 18px 28px;
+  border-radius: 999px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: none;
+  text-transform: uppercase;
+  margin-bottom: 64px;
+}
+.proto-cta:hover { color: var(--ink); background: #FFB17F; }
+.proto-cta svg { width: 18px; height: 18px; }
+
+.flows {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  border-top: 1px solid rgba(245, 241, 236, 0.12);
+  padding-top: 48px;
+}
+@media (max-width: 800px) {
+  .flows { grid-template-columns: 1fr; }
+}
+.flow {
+  padding: 4px 0;
+}
+.flow .index {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 28px;
+  color: var(--peach-300);
+  letter-spacing: -0.03em;
+  display: block;
+  margin-bottom: 10px;
+}
+.flow h4 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: -0.015em;
+  margin-bottom: 8px;
+  color: #FBF8F4;
+}
+.flow p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(245, 241, 236, 0.72);
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+footer {
+  padding: 56px 0;
+  border-top: 1px solid var(--hairline);
+  font-size: 12.5px;
+  color: var(--ink-4);
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+footer p { font-size: 12.5px; color: var(--ink-4); }
+
+/* =========================================================
+   DECORATIVE
+   ========================================================= */
+.deco-rule {
+  display: block;
+  width: 64px;
+  height: 1px;
+  background: var(--peach-deep);
+  margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+
+<!-- =================== TOP BAR =================== -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <svg viewBox="0 0 1237 1237" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="618.062" cy="618.062" r="607.911" fill="#FEF8F4" stroke="#F5BF96" stroke-width="20.3013"/>
+        <path d="M881.792 656.895L846.271 618.09L881.792 579.293C942.09 513.411 942.09 406.237 881.792 340.363C821.486 274.49 723.376 274.49 663.084 340.363L428.748 596.366C417.766 608.356 417.766 627.809 428.748 639.807L663.084 895.81C692.296 927.715 731.13 945.296 772.438 945.296C813.746 945.296 852.58 927.722 881.792 895.81C910.996 863.904 927.083 821.472 927.083 776.352C927.083 731.233 910.996 688.793 881.792 656.888V656.895ZM842.02 852.384C823.432 872.699 798.724 883.873 772.431 883.873C746.137 883.873 721.437 872.691 702.841 852.384L488.384 618.098L702.841 383.812C741.21 341.896 803.644 341.896 842.013 383.812C860.602 404.12 870.837 431.119 870.837 459.836C870.837 488.553 860.602 515.552 842.013 535.852L890.311 481.858L851.498 346.73L740.163 317.695L649.257 414.852L454.577 618.09L663.084 858.86C772.438 924.093 857.225 883.756 881.792 812.685C858.298 812.685 860.602 832.084 842.013 852.384H842.02ZM589.47 858.853C562.951 910.395 512.443 945.311 454.577 945.311C369.303 945.311 299.932 869.526 299.932 776.368V459.836C299.932 366.678 369.303 290.893 454.577 290.893C512.436 290.893 562.951 325.809 589.47 377.351L547.195 423.526C533.541 382.064 497.182 352.331 454.577 352.331C400.312 352.331 356.17 400.562 356.17 459.844V776.376C356.17 835.657 400.312 883.881 454.577 883.881C497.182 883.881 533.541 854.147 547.195 812.685L589.47 858.86V858.853Z" fill="#FFBC8F"/>
+      </svg>
+      Kai
+      <span class="brand-meta">Health Journal · Brief</span>
+    </div>
+    <nav class="topbar-nav">
+      <a href="#opportunity">Opportunity</a>
+      <a href="#stories">Job stories</a>
+      <a href="#acceptance">Acceptance</a>
+      <a href="#prototype">Prototype</a>
+    </nav>
+  </div>
+</div>
+
+<!-- =================== HERO =================== -->
+<section class="hero">
+  <div class="page">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">Designer brief · Kai · v0.1</div>
+        <h1 class="h1">A <em>journal</em> for the in-between days.</h1>
+        <p class="lede">
+          Kai's second value proposition. A quiet, conversational memory of what it's actually like to live with a rare disease between doctor visits — written from the patient's own words, surfaced when they need it.
+        </p>
+      </div>
+      <aside class="hero-right">
+        <h4>Brief at a glance</h4>
+        <ul>
+          <li><span class="num">01</span><span><strong>Feature</strong> — Health Journal, sitting alongside For You as Kai's second main destination.</span></li>
+          <li><span class="num">02</span><span><strong>Audience</strong> — patients managing chronic rare diseases, and the caregivers supporting them.</span></li>
+          <li><span class="num">03</span><span><strong>Outcome</strong> — better doctor visits, less mental load for caregivers, a record built passively from conversations and check-ins.</span></li>
+          <li><span class="num">04</span><span><strong>Out of scope</strong> — voice memos (coming later), care-team collaboration, integrations with EHR systems.</span></li>
+        </ul>
+        <div class="meta">
+          <span>v0.1 · May 2026</span>
+          <span>For designers</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- =================== OPPORTUNITY =================== -->
+<section class="opportunity" id="opportunity">
+  <div class="page">
+    <div class="eyebrow">The opportunity</div>
+    <h2 class="h2 serif">The <em>real</em> story of living with a chronic condition happens between visits.</h2>
+    <p class="lede">
+      Doctor appointments are short. The disease isn't. The hardest parts — rough mornings, small wins, symptom flareups, the practical chaos of meds and meals — happen in the weeks in between, and by the time the next appointment rolls around, most of it is forgotten or compressed into a sentence.
+    </p>
+
+    <div class="opportunity-split">
+      <div class="opp-col">
+        <h3>For the patient</h3>
+        <p class="who">Living with this is the full-time job. The visit is the report.</p>
+        <p>
+          When patients try to summarize months of lived experience in a 15-minute appointment, the texture gets lost. The "it interfered with the team call" moment becomes "itching has been bad." The week where evening doses before 9 PM clearly helped becomes a shrug.
+        </p>
+        <p>
+          A journal that <strong>writes itself from the conversations they're already having with Kai</strong> means they walk into appointments with the real picture — not a remembered one.
+        </p>
+      </div>
+
+      <div class="opp-col">
+        <h3>For the caregiver</h3>
+        <p class="who">It's all in my head, or on scraps of paper, or in a notes app I can't find.</p>
+        <p>
+          Caregivers are doing invisible administrative work — tracking symptoms, meds, mood, appointments — while also showing up emotionally. That tracking burden is one of the most exhausting parts of caregiving, and the one that almost never gets named.
+        </p>
+        <p>
+          One place that's <strong>building the picture from check-ins and conversations</strong> lifts a real weight. Not by adding another thing to track, but by capturing what's already being said.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== PULLED QUOTE =================== -->
+<section class="pull-quote">
+  <div class="page-narrow">
+    <span class="mark">"</span>
+    <blockquote>
+      The hardest thing isn't the symptoms, honestly — it's not knowing what to expect tomorrow.
+    </blockquote>
+    <cite>— a real moment, captured in chat</cite>
+  </div>
+</section>
+
+<!-- =================== JOB STORIES =================== -->
+<section class="stories" id="stories">
+  <div class="page">
+    <div class="eyebrow" style="margin-bottom: 16px;">Job stories</div>
+    <h2 class="h2 serif">Who this is <em>for</em>, and what they're trying to do.</h2>
+    <p class="lede">
+      Two distinct roles, one shared outcome: the lived reality of the disease shows up in the room when it matters.
+    </p>
+
+    <!-- Story 1 -->
+    <article class="story">
+      <div class="story-meta">
+        <span class="index">01</span>
+        <div class="role">The Patient</div>
+        <div class="role-sub">Managing a chronic condition</div>
+      </div>
+      <div class="story-body">
+        <div class="story-line">
+          <span class="key">As a…</span>
+          <span class="val">Patient managing a chronic condition</span>
+        </div>
+        <div class="story-line">
+          <span class="key">When I'm…</span>
+          <span class="val">going through what this is actually like — the rough mornings, the small wins, the symptom flareups</span>
+        </div>
+        <div class="story-line">
+          <span class="key">I want to…</span>
+          <span class="val">have the day-to-day reality of living with this captured in a journal</span>
+        </div>
+        <div class="story-line">
+          <span class="key">So I can…</span>
+          <span class="val">build a record of what I've <em>really</em> been going through</span>
+        </div>
+        <div class="story-line">
+          <span class="key">In order that…</span>
+          <span class="val">the conversations I'm having with Kai give my doctor a real picture of what's actually been happening between visits</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Story 2 -->
+    <article class="story">
+      <div class="story-meta">
+        <span class="index">02</span>
+        <div class="role">The Caregiver</div>
+        <div class="role-sub">Supporting someone they love</div>
+      </div>
+      <div class="story-body">
+        <div class="story-line">
+          <span class="key">As a…</span>
+          <span class="val">Caregiver for someone managing a chronic condition</span>
+        </div>
+        <div class="story-line">
+          <span class="key">When I'm…</span>
+          <span class="val">trying to keep track of everything across appointments, meds, and symptoms</span>
+        </div>
+        <div class="story-line">
+          <span class="key">I want to…</span>
+          <span class="val">have one place that's building the picture from all our check-ins and conversations with Kai</span>
+        </div>
+        <div class="story-line">
+          <span class="key">So I can…</span>
+          <span class="val">stop holding it all in my head or scribbling it on scraps of paper</span>
+        </div>
+        <div class="story-line">
+          <span class="key">In order that…</span>
+          <span class="val">some of the burden of caregiving is <em>lifted</em> off me</span>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- =================== ACCEPTANCE =================== -->
+<section class="acceptance" id="acceptance">
+  <div class="page">
+    <div class="eyebrow" style="margin-bottom: 16px;">Acceptance criteria</div>
+    <h2 class="h2 serif">The four <em>capabilities</em> the shipped feature must support.</h2>
+    <p class="lede">
+      Stated at the level of what a patient or caregiver can do — not at the level of screens or components.
+    </p>
+
+    <div class="criteria-grid">
+      <div class="criterion">
+        <span class="num">01</span>
+        <h3>Track and view their journal.</h3>
+        <p>Patients can see what's been captured about their lived experience — symptoms, mood, medications, conversation moments — in one place inside Kai.</p>
+      </div>
+      <div class="criterion">
+        <span class="num">02</span>
+        <h3>Generate summaries on demand, and save them.</h3>
+        <p>At any time, the patient can ask Kai to summarize their journal — for any timeframe, any focus — and keep that summary so they can return to it later.</p>
+      </div>
+      <div class="criterion">
+        <span class="num">03</span>
+        <h3>Share with the doctor.</h3>
+        <p>A summary can be sent to the patient's doctor or care team. <strong>PDF is the working artifact for now.</strong> Future direction: a care-team view that the patient or caregiver grants access to — or a shareable link — letting the doctor see the live picture rather than a static snapshot. Design for the PDF flow now, but keep that future in peripheral vision.</p>
+      </div>
+      <div class="criterion">
+        <span class="num">04</span>
+        <h3>Capture from structured <em>and</em> unstructured input.</h3>
+        <p>Kai already does a version of this — if a patient asks for a check-in summary today, Kai pulls together themes across energy, itching, mood, sleep, and coping. The Health Journal extends that capability: not just check-in data, but anything said in conversation ("the itch was worst this morning") becomes part of the record, alongside the structured entries from onboarding and daily check-ins.</p>
+      </div>
+    </div>
+
+    <div style="margin-top: 64px; padding: 32px 36px; background: rgba(255, 255, 255, 0.5); border: 1px solid var(--peach-100); border-radius: 18px;">
+      <div class="eyebrow" style="margin-bottom: 14px;">Design considerations</div>
+      <p style="font-size: 15.5px; line-height: 1.6; color: var(--ink-2); margin-bottom: 14px;">
+        Not formal acceptance, but worth holding while you design. Each emerged from the prototype work and deserves a deliberate take — not a default.
+      </p>
+      <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.55; color: var(--ink-2);">
+        <li style="display: flex; gap: 12px;"><span style="color: var(--peach-deep); font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; flex-shrink: 0;">i.</span><span><strong style="color: var(--ink);">Highlights vs full feed.</strong> The journal home likely needs both — a curated default and a "see all entries" path. Worth deciding what makes the highlights cut.</span></li>
+        <li style="display: flex; gap: 12px;"><span style="color: var(--peach-deep); font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; flex-shrink: 0;">ii.</span><span><strong style="color: var(--ink);">Sparse-data fallback.</strong> Most summaries in the first weeks will be drawn from very little data. Charts will be meaningless. What does a useful summary look like when there's almost nothing structured to graph?</span></li>
+        <li style="display: flex; gap: 12px;"><span style="color: var(--peach-deep); font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; flex-shrink: 0;">iii.</span><span><strong style="color: var(--ink);">Privacy at the share step.</strong> Sharing surfaces words the patient said in chat. They should be able to see what's about to leave Kai, and have it not feel like surveillance.</span></li>
+        <li style="display: flex; gap: 12px;"><span style="color: var(--peach-deep); font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; flex-shrink: 0;">iv.</span><span><strong style="color: var(--ink);">Tone.</strong> Kai is a coach and a companion — summaries should sound like them, not like a medical chart. Avoid clinical or report-like voice in the output.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =================== PROTOTYPE =================== -->
+<section class="proto" id="prototype">
+  <div class="page">
+    <div class="eyebrow">Reference prototype</div>
+    <h2 class="h2 serif">There's a working <em>prototype</em>.</h2>
+    <p class="lede">
+      A tap-through covering the main entry points, the journal destination, summary generation (overall + symptom-specific + narrative-only), conversational ask in chat, and the share-with-doctor flow. Use it as a feel reference and a baseline to push against.
+    </p>
+
+    <a href="./kai-health-journal-prototype.html" class="proto-cta">
+      Open the prototype
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13L13 5M7 5h6v6"/></svg>
+    </a>
+
+    <div class="flows">
+      <div class="flow">
+        <span class="index">i.</span>
+        <h4>The happy path</h4>
+        <p>+ tray → Health Journal → Write a summary → Share with doctor. The full flow most patients will take when prepping for an appointment.</p>
+      </div>
+      <div class="flow">
+        <span class="index">ii.</span>
+        <h4>Conversational ask</h4>
+        <p>Type "summarize my itching" in chat. Kai responds with an inline summary card that links to the full report. This is the future-state — voice goes here too.</p>
+      </div>
+      <div class="flow">
+        <span class="index">iii.</span>
+        <h4>Sparse data edge</h4>
+        <p>A new user, one week in. Narrative-only summary with themes and quotes — no charts. Does the "we don't have enough yet" framing feel honest or frustrating?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FOOTER =================== -->
+<footer>
+  <div class="page">
+    <p>Kai · Health Journal · Design brief v0.1 · May 2026</p>
+  </div>
+</footer>
+
+</body>
+</html>
